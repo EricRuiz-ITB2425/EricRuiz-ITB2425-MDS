@@ -1,27 +1,44 @@
 """
 Eric Ruiz Fernandez
 27/9/2024
-ASIXcB MDS TA02
-Descripció: Exemple dels apunts
+ASIXcB MDS TA03
+Descripció: Comprovar Edat
 """
 
 
 #Programa que demana la edat i diu si ets major d'edat.
 
-AquestAny = 2024
+from datetime import datetime
+
+AquestAny = datetime.now().year
+AquestMes = datetime.now().month
+AquestDia = datetime.now().day
 
 dia = int(input("Quin dia vas neixer?"))
-mes =int(input("Quin mes vas neixer?"))
-any int(input("Quin any vas neixer?"))
+mes = int(input("Quin mes vas neixer?"))
+any = int(input("Quin any vas neixer?"))
 
-if dia > 31:
-    print("dia no valid")
 
-if mes > 12:
-    print("mes no valid")
+while True:
+    if dia > 31:
+        print("dia no valid")
+    elif dia > 31:
+        break
 
-if any > 2024:
-    print("mes no valid")
+    if mes > 12:
+        print("mes no valid")
+    elif mes > 12:
+        break
+
+    if any > 2024:
+        print("mes no valid")
+        producte: int = any-AquestAny
+    elif any > 2024:
+        break
+
+print()
+
+
 
 
 
