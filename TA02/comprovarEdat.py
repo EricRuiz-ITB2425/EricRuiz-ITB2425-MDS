@@ -23,20 +23,26 @@ while True:
     if dia > 31:
         print("dia no valid")
     elif dia > 31:
+        print("Dia no valid")
         break
 
     if mes > 12:
         print("mes no valid")
     elif mes > 12:
+        print("Mes no valid")
         break
 
     if any > 2024:
         print("mes no valid")
         producte: int = any-AquestAny
     elif any > 2024:
+        print("Any no valid")
         break
 
-print()
+any - AquestAny = edat
+
+
+print(edat)
 
 
 
