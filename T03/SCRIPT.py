@@ -5,5 +5,3 @@ ASIXcB MDS TA03
 Descripció: Script Processar les dades
 """
 
-holas
-pipiip
