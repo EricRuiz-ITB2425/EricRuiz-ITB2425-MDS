@@ -5,3 +5,4 @@ ASIXcB MDS TA03
 Descripció: Script Processar les dades
 """
 
+# Aquest programa ens ajudara a processar les dades d'un XML en pantalla.
