@@ -28,15 +28,13 @@ def llegir_i_mostrar_dades(xml_file):
         "Tipus incidència més sol·licitat": "",
         "Correu més freqüent": "",
         "Nom més freqüent": "",
-        "Data més freqüent": "",
-        "Aula més freqüent": ""
+        "Data més freqüent": ""
     }
 
     tipus_incidencia_counter = Counter()
     correus_counter = Counter()
     noms_counter = Counter()
     dates_counter = Counter()
-    aulas_counter = Counter()
 
     # Itera sobre cada fila (row) en l'XML
     for row in root.findall('row'):
@@ -44,7 +42,6 @@ def llegir_i_mostrar_dades(xml_file):
         fecha_incidencia = ""
         correo = ""
         tipus_incidencia = ""
-        aula = ""
 
         # Extraure informació necessària
         for element in row:
@@ -59,9 +56,6 @@ def llegir_i_mostrar_dades(xml_file):
                 correo = valor
             elif etiqueta == "Tipus incidència":
                 tipus_incidencia = valor
-            elif etiqueta == "Aula":
-                aula = valor  # Guardamos el valor del aula
-                print(f"Aula detectada: {aula}")  # Imprimir el aula detectada
 
         # Validar el correu
         correo_valido = "@" in correo and correo.endswith("@itb.cat")
@@ -90,7 +84,6 @@ def llegir_i_mostrar_dades(xml_file):
         correus_counter[correo] += 1
         noms_counter[nombre] += 1
         dates_counter[fecha_incidencia] += 1
-        aulas_counter[aula] += 1
 
     # Determinar els més freqüents
     if tipus_incidencia_counter:
@@ -101,8 +94,6 @@ def llegir_i_mostrar_dades(xml_file):
         resum["Nom més freqüent"] = noms_counter.most_common(1)[0][0]
     if dates_counter:
         resum["Data més freqüent"] = dates_counter.most_common(1)[0][0]
-    if aulas_counter:
-        resum["Aula més freqüent"] = aulas_counter.most_common(1)[0][0]
 
     # Calcular el percentatge d'incidències vàlides
     total_incidencies = resum["Numero de incidències vàlides"] + resum["Numero de incidències invàlides"]
@@ -120,7 +111,6 @@ def llegir_i_mostrar_dades(xml_file):
     print(f"{Fore.BLUE}Correu més freqüent: {Fore.GREEN}{resum['Correu més freqüent']}{Style.RESET_ALL}")
     print(f"{Fore.BLUE}Nom més freqüent: {Fore.GREEN}{resum['Nom més freqüent']}{Style.RESET_ALL}")
     print(f"{Fore.BLUE}Data més freqüent: {Fore.GREEN}{resum['Data més freqüent']}{Style.RESET_ALL}")
-    print(f"{Fore.BLUE}Aula més freqüent: {Fore.GREEN}{resum['Aula més freqüent']}{Style.RESET_ALL}")
     print(f"{Fore.BLUE}Percentatge d'incidències vàlides: {Fore.GREEN}{percentatge_valides:.2f}%{Style.RESET_ALL}")
 
 def guardar_dades_json(resum):

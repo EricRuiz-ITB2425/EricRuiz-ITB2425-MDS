@@ -234,5 +234,14 @@
         "Nom més freqüent": "Ian Frias",
         "Data més freqüent": "01/10/2024",
         "Aula més freqüent": ""
+    },
+    {
+        "Data i hora": "2024-10-25 20:31:05",
+        "Numero de incidències vàlides": 15,
+        "Numero de incidències invàlides": 147,
+        "Tipus incidència més sol·licitat": "Programari(fallada)",
+        "Correu més freqüent": "ian.frias.7e8@itb.cat",
+        "Nom més freqüent": "Ian Frias",
+        "Data més freqüent": "01/10/2024"
     }
 ]
