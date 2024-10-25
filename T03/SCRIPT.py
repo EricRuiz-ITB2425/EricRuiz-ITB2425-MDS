@@ -26,9 +26,7 @@ def llegir_i_mostrar_dades(xml_file):
 
     # Llista per emmagatzemar les incidències
     incidencies = []
-
-    # Data actual per validar la data de la incidència
-    data_actual = datetime.now()
+    resum = {}
 
     # Itera sobre cada fila (row) en l'XML
     for i, row in enumerate(root.findall('row')):
@@ -36,57 +34,51 @@ def llegir_i_mostrar_dades(xml_file):
 
         # Diccionari per emmagatzemar cada incidència
         incidencia = {}
-        motius_no_valides = []  # Llista per motius de no validesa
+        nivell_urgencia = ""
+        aula = ""
 
         for element in row:
             etiqueta = element.tag.replace('_', ' ').capitalize()
-            valor = element.text.strip() if element.text else "No disponible"
+            valor = element.text if element.text else "No disponible"
             incidencia[etiqueta] = valor  # Emmagatzema l'etiqueta i el valor al diccionari
 
-        # Comprovació de validacions
-        correu = incidencia.get('Adreça electrònica', '')
-        nom_cognoms = incidencia.get('Nom i cognoms', '')
-        aula = incidencia.get('Lloc aula ex aula 208 ', '')
-        data_incidencia = incidencia.get('Data de la incidència', '')
+            # Afegeix color segons el tipus d'informació
+            if etiqueta == "Nivell urgencia de solució":
+                nivell_urgencia = valor
+                color = Fore.RED if "Molt Urgent" in valor else Fore.YELLOW if "Urgent" in valor else Fore.GREEN
+                print(f"\t{color}{etiqueta}: {valor}{Style.RESET_ALL}")
+            else:
+                print(f"\t{Fore.CYAN}{etiqueta}: {Fore.WHITE}{valor}{Style.RESET_ALL}")
 
-        # Comprovar si el correu electrònic és vàlid
-        if not correu.endswith('@itb.cat') or not correu.split('@')[0].replace('.', ' ').strip().lower() == nom_cognoms.lower():
-            motius_no_valides.append("Correu electrònic no vàlid.")
+            if etiqueta == "Aula":
+                aula = valor
 
-        # Comprovar si l'aula és vàlida
-        if aula not in aules_valides:
-            motius_no_valides.append("Aula no vàlida.")
-
-        # Comprovar si la data de la incidència és vàlida
-        try:
-            data_incidencia_dt = datetime.strptime(data_incidencia, '%d/%m/%Y')
-            if data_incidencia_dt > data_actual or data_incidencia_dt < (data_actual.replace(year=data_actual.year - 1)):
-                motius_no_valides.append("Data de la incidència no vàlida.")
-        except ValueError:
-            motius_no_valides.append("Format de data incorrecte.")
-
-        # Afegir motius no vàlids i imprimir la informació
-        if motius_no_valides:
-            print(f"Incidència {i + 1} no vàlida: {', '.join(motius_no_valides)}")
-            print(f"Detalls: {incidencia}")  # Mostrar informació de la incidència
-        else:
-            print(f"{Fore.GREEN}Incidència {i + 1} vàlida.{Style.RESET_ALL}")
+        # Validar incidència
+        if nivell_urgencia and aula in aules_valides:
+            incidencies.append(incidencia)
+            # Actualitzar resum
+            data = datetime.now().strftime("%Y-%m-%d")
+            if data not in resum:
+                resum[data] = {"total": 0, "urgentes": 0}
+            resum[data]["total"] += 1
+            if "Molt Urgent" in nivell_urgencia or "Urgent" in nivell_urgencia:
+                resum[data]["urgentes"] += 1
 
         print("-" * 80)
 
-    # Després de processar totes les incidències, guarda-les en un fitxer JSON
-    guardar_dades_json(incidencies)
+    # Guarda el resum en JSON
+    guardar_dades_json(resum)
 
 
-def guardar_dades_json(incidencies):
+def guardar_dades_json(resum):
     """
-    Guarda les dades en un fitxer JSON anomenat incidencies.json.
+    Guarda el resum en un fitxer JSON anomenat resum_incidencies.json
     """
-    json_file = 'incidencies.json'
+    json_file = 'resum_incidencies.json'
 
     try:
         with open(json_file, 'w', encoding='utf-8') as f:
-            json.dump(incidencies, f, ensure_ascii=False, indent=4)
+            json.dump(resum, f, ensure_ascii=False, indent=4)
         print(f"{Fore.GREEN}Dades guardades correctament a {json_file}{Style.RESET_ALL}")
     except Exception as e:
         print(f"Error en guardar les dades a l'arxiu JSON: {e}")
