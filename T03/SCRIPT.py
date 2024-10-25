@@ -151,5 +151,3 @@ xml_file = './datos.xml'
 
 # Executa la funció per llegir, mostrar i guardar les dades
 llegir_i_mostrar_dades(xml_file)
-
-aa
