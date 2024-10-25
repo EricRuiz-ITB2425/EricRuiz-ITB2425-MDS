@@ -3,6 +3,10 @@ import json
 from collections import Counter
 from datetime import datetime
 import unicodedata
+from colorama import Fore, Style, init
+
+# Inicializa colorama
+init(autoreset=True)
 
 def quitar_acentos(texto):
     """Elimina los acentos de un texto."""
@@ -24,13 +28,15 @@ def llegir_i_mostrar_dades(xml_file):
         "Tipus incidència més sol·licitat": "",
         "Correu més freqüent": "",
         "Nom més freqüent": "",
-        "Data més freqüent": ""
+        "Data més freqüent": "",
+        "Aula més freqüent": ""
     }
 
     tipus_incidencia_counter = Counter()
     correus_counter = Counter()
     noms_counter = Counter()
     dates_counter = Counter()
+    aulas_counter = Counter()
 
     # Itera sobre cada fila (row) en l'XML
     for row in root.findall('row'):
@@ -38,7 +44,7 @@ def llegir_i_mostrar_dades(xml_file):
         fecha_incidencia = ""
         correo = ""
         tipus_incidencia = ""
-        descripcion = ""
+        aula = ""
 
         # Extraure informació necessària
         for element in row:
@@ -53,8 +59,9 @@ def llegir_i_mostrar_dades(xml_file):
                 correo = valor
             elif etiqueta == "Tipus incidència":
                 tipus_incidencia = valor
-            elif etiqueta == "Descripció":
-                descripcion = valor
+            elif etiqueta == "Aula":
+                aula = valor  # Guardamos el valor del aula
+                print(f"Aula detectada: {aula}")  # Imprimir el aula detectada
 
         # Validar el correu
         correo_valido = "@" in correo and correo.endswith("@itb.cat")
@@ -83,6 +90,7 @@ def llegir_i_mostrar_dades(xml_file):
         correus_counter[correo] += 1
         noms_counter[nombre] += 1
         dates_counter[fecha_incidencia] += 1
+        aulas_counter[aula] += 1
 
     # Determinar els més freqüents
     if tipus_incidencia_counter:
@@ -93,19 +101,27 @@ def llegir_i_mostrar_dades(xml_file):
         resum["Nom més freqüent"] = noms_counter.most_common(1)[0][0]
     if dates_counter:
         resum["Data més freqüent"] = dates_counter.most_common(1)[0][0]
+    if aulas_counter:
+        resum["Aula més freqüent"] = aulas_counter.most_common(1)[0][0]
+
+    # Calcular el percentatge d'incidències vàlides
+    total_incidencies = resum["Numero de incidències vàlides"] + resum["Numero de incidències invàlides"]
+    percentatge_valides = (resum["Numero de incidències vàlides"] / total_incidencies * 100) if total_incidencies > 0 else 0
 
     # Guarda el resum en JSON
     guardar_dades_json(resum)
 
-    # Imprimir el resum
-    print("Resum de les incidències:")
-    print(f"Data i hora: {resum['Data i hora']}")
-    print(f"Numero de incidències vàlides: {resum['Numero de incidències vàlides']}")
-    print(f"Numero de incidències invàlides: {resum['Numero de incidències invàlides']}")
-    print(f"Tipus incidència més sol·licitat: {resum['Tipus incidència més sol·licitat']}")
-    print(f"Correu més freqüent: {resum['Correu més freqüent']}")
-    print(f"Nom més freqüent: {resum['Nom més freqüent']}")
-    print(f"Data més freqüent: {resum['Data més freqüent']}")
+    # Imprimir el resum amb color
+    print(f"{Fore.BLUE + Style.BRIGHT}Resum de les incidències:{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Data i hora: {Fore.YELLOW}{resum['Data i hora']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Numero de incidències vàlides: {Fore.GREEN}{resum['Numero de incidències vàlides']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Numero de incidències invàlides: {Fore.RED}{resum['Numero de incidències invàlides']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Tipus incidència més sol·licitat: {Fore.GREEN}{resum['Tipus incidència més sol·licitat']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Correu més freqüent: {Fore.GREEN}{resum['Correu més freqüent']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Nom més freqüent: {Fore.GREEN}{resum['Nom més freqüent']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Data més freqüent: {Fore.GREEN}{resum['Data més freqüent']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Aula més freqüent: {Fore.GREEN}{resum['Aula més freqüent']}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}Percentatge d'incidències vàlides: {Fore.GREEN}{percentatge_valides:.2f}%{Style.RESET_ALL}")
 
 def guardar_dades_json(resum):
     """Guarda el resum en un fitxer JSON anomenat incidencies.json"""
@@ -126,13 +142,12 @@ def guardar_dades_json(resum):
         # Escriure el contingut actualitzat al fitxer JSON
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        print(f"Dades guardades correctament a {json_file}")
+        print(f"{Fore.YELLOW}Dades guardades correctament a {json_file}{Style.RESET_ALL}")
     except Exception as e:
-        print(f"Error en guardar les dades a l'arxiu JSON: {e}")
+        print(f"{Fore.RED}Error en guardar les dades a l'arxiu JSON: {e}{Style.RESET_ALL}")
 
 # Ruta de l'arxiu XML
 xml_file = './datos.xml'
 
 # Executa la funció per llegir, mostrar i guardar les dades
 llegir_i_mostrar_dades(xml_file)
-
