@@ -1,39 +1,32 @@
 import xml.etree.ElementTree as ET
 import json
 from collections import Counter
+from datetime import datetime
+import unicodedata
 
-# Aules vàlides
-aules_valides = {
-    "1", "2", "3", "4", "5", "9", "12", "13", "14", "15", "16", "17", "18", "19",
-    "24", "25", "99", "101", "102", "103", "105", "106", "107", "108", "109",
-    "201", "202", "205", "206", "207", "208", "209", "301", "302", "305", "306",
-    "307", "308", "309", "001", "002", "003", "004", "005", "009", "01", "02",
-    "03", "04", "05", "09", "012", "013", "014", "015", "016", "017", "018",
-    "019", "024", "025", "099"
-}
+def quitar_acentos(texto):
+    """Elimina los acentos de un texto."""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 def llegir_i_mostrar_dades(xml_file):
-    """
-    Llegeix i analitza l'arxiu XML, aplica filtres i guarda un resum en un fitxer JSON.
-    """
     # Llegeix i analitza l'arxiu XML
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
     # Diccionari per emmagatzemar el resum de les incidències
     resum = {
+        "Data i hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Numero de incidències vàlides": 0,
-        "Nombre": 0,
-        "Fecha de la incidència": 0,
-        "Adreça electrònica": 0,
+        "Numero de incidències invàlides": 0,
         "Tipus incidència més sol·licitat": "",
         "Correu més freqüent": "",
         "Nom més freqüent": "",
-        "Data més freqüent": "",
-        "Dates": []
+        "Data més freqüent": ""
     }
 
-    descripciones_procesadas = set()
     tipus_incidencia_counter = Counter()
     correus_counter = Counter()
     noms_counter = Counter()
@@ -44,6 +37,8 @@ def llegir_i_mostrar_dades(xml_file):
         nombre = ""
         fecha_incidencia = ""
         correo = ""
+        tipus_incidencia = ""
+        descripcion = ""
 
         # Extraure informació necessària
         for element in row:
@@ -56,61 +51,77 @@ def llegir_i_mostrar_dades(xml_file):
                 fecha_incidencia = valor
             elif etiqueta == "Adreça electrònica":
                 correo = valor
+            elif etiqueta == "Tipus incidència":
+                tipus_incidencia = valor
+            elif etiqueta == "Descripció":
+                descripcion = valor
 
-        # Aplicar filtres
-        if any(not campo for campo in [nombre, fecha_incidencia, correo]):
-            continue  # Ignorar si falta informació clau
+        # Validar el correu
+        correo_valido = "@" in correo and correo.endswith("@itb.cat")
 
-        if any(char.isdigit() for char in nombre):
-            continue  # Ignorar si el nom conté números
+        # Comprobar si falta informació clau
+        if any(not campo for campo in [nombre, fecha_incidencia, tipus_incidencia]):
+            resum["Numero de incidències invàlides"] += 1
+            continue
+        elif any(char.isdigit() for char in nombre):
+            resum["Numero de incidències invàlides"] += 1
+            continue
+        elif not correo_valido:
+            resum["Numero de incidències invàlides"] += 1
+            continue
 
-        # Si passa tots els filtres, comptar les incidències vàlides
+        # Normalizar nombre y correo para comparar
+        nombre_normalizado = quitar_acentos(nombre.lower()).replace(" ", ".")
+        correo_usuario = quitar_acentos(correo.split('@')[0].lower())
+        if nombre_normalizado not in correo_usuario:
+            resum["Numero de incidències invàlides"] += 1
+            continue
+
+        # Contar incidències vàlides
         resum["Numero de incidències vàlides"] += 1
-        resum["Nombre"] += 1 if nombre else 0
-        resum["Fecha de la incidència"] += 1 if fecha_incidencia else 0
-        resum["Adreça electrònica"] += 1 if correo else 0
-
-        # Actualitzar counters
-        noms_counter[nombre] += 1
+        tipus_incidencia_counter[tipus_incidencia] += 1
         correus_counter[correo] += 1
+        noms_counter[nombre] += 1
         dates_counter[fecha_incidencia] += 1
-        resum["Dates"].append(fecha_incidencia)
 
     # Determinar els més freqüents
-    if noms_counter:
-        resum["Nom més freqüent"] = noms_counter.most_common(1)[0][0]
-    if correus_counter:
-        resum["Correu més freqüent"] = correus_counter.most_common(1)[0][0]
-    if dates_counter:
-        resum["Data més freqüent"] = dates_counter.most_common(1)[0][0]
     if tipus_incidencia_counter:
         resum["Tipus incidència més sol·licitat"] = tipus_incidencia_counter.most_common(1)[0][0]
+    if correus_counter:
+        resum["Correu més freqüent"] = correus_counter.most_common(1)[0][0]
+    if noms_counter:
+        resum["Nom més freqüent"] = noms_counter.most_common(1)[0][0]
+    if dates_counter:
+        resum["Data més freqüent"] = dates_counter.most_common(1)[0][0]
 
     # Guarda el resum en JSON
     guardar_dades_json(resum)
 
-    # Imprimir el resum a la consola
-    print("Resum de les incidències vàlides:")
-    for key, value in resum.items():
-        print(f"{key}: {value}")
-
+    # Imprimir el resum
+    print("Resum de les incidències:")
+    print(f"Data i hora: {resum['Data i hora']}")
+    print(f"Numero de incidències vàlides: {resum['Numero de incidències vàlides']}")
+    print(f"Numero de incidències invàlides: {resum['Numero de incidències invàlides']}")
+    print(f"Tipus incidència més sol·licitat: {resum['Tipus incidència més sol·licitat']}")
+    print(f"Correu més freqüent: {resum['Correu més freqüent']}")
+    print(f"Nom més freqüent: {resum['Nom més freqüent']}")
+    print(f"Data més freqüent: {resum['Data més freqüent']}")
 
 def guardar_dades_json(resum):
-    """
-    Guarda el resum en un fitxer JSON anomenat resum_incidencies.json
-    """
-    json_file = 'resum_incidencies.json'
+    """Guarda el resum en un fitxer JSON anomenat incidencies.json"""
+    json_file = 'incidencies.json'
 
     try:
         # Intentar carregar el contingut existent
         try:
             with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                content = f.read().strip()
+                data = json.loads(content) if content else []  # Manejo del contingut buit
         except FileNotFoundError:
-            data = {"ejecuciones": []}  # Si no existeix, crear nova estructura
+            data = []  # Si no existeix, crear nova estructura
 
         # Afegir la nova execució al fitxer
-        data["ejecuciones"].append(resum)
+        data.append(resum)
 
         # Escriure el contingut actualitzat al fitxer JSON
         with open(json_file, 'w', encoding='utf-8') as f:
@@ -118,7 +129,6 @@ def guardar_dades_json(resum):
         print(f"Dades guardades correctament a {json_file}")
     except Exception as e:
         print(f"Error en guardar les dades a l'arxiu JSON: {e}")
-
 
 # Ruta de l'arxiu XML
 xml_file = './datos.xml'
